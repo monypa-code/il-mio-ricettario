@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f3eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Ricettario">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Il Mio Ricettario</title>
+<style>
+:root{--bg:#f7f3eb;--paper:#fffdf8;--ink:#292820;--muted:#777365;--accent:#68785d;--line:#e8e1d5;--soft:#edf0e8;--danger:#a3483e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{padding:22px 18px 14px;max-width:760px;margin:auto}h1{font:600 28px Georgia,serif;margin:0 0 5px}.sub{color:var(--muted);font-size:13px}
+main{max-width:760px;margin:auto;padding:0 14px 100px}
+.toolbar{display:flex;gap:8px;margin:10px 0 14px}.toolbar input{flex:1;min-width:0}
+input,textarea,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font:inherit}
+textarea{min-height:110px;resize:vertical}
+button{border:0;border-radius:12px;padding:12px 15px;background:var(--accent);color:white;font:600 14px inherit;cursor:pointer}
+button.secondary{background:var(--soft);color:var(--ink)}button.ghost{background:transparent;color:var(--accent);padding:8px}
+button.danger{background:#f6e9e6;color:var(--danger)}
+.tabs{display:flex;gap:7px;overflow:auto;padding:3px 0 12px}.tabs button{white-space:nowrap;background:transparent;color:var(--muted);border:1px solid var(--line);padding:9px 12px}.tabs button.active{background:var(--soft);color:var(--ink);border-color:#cbd3c2}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.card img{width:100%;height:140px;object-fit:cover;background:#eee9df}.cardbody{padding:13px}.card h3{font:600 19px Georgia,serif;margin:0 0 7px}.meta{font-size:12px;color:var(--muted)}.cardactions{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0}.panel h2{font:600 22px Georgia,serif;margin:0 0 12px}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
+.hidden{display:none!important}.notice{background:var(--soft);border-radius:12px;padding:12px;font-size:13px;line-height:1.45;color:#46513f;margin:12px 0}
+.recipe h2{font:600 27px Georgia,serif;margin:4px 0}.recipe h3{font:600 17px Georgia,serif;margin:18px 0 7px}.recipe p,.recipe li{line-height:1.55}.recipe ul,.recipe ol{padding-left:22px}
+.empty{text-align:center;padding:40px 15px;color:var(--muted)}.empty strong{display:block;color:var(--ink);font:22px Georgia,serif;margin-bottom:7px}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#f7f3ebee;backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:10px max(14px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:10px}
+.bottom button{width:min(360px,50%)}.small{font-size:12px;color:var(--muted)}
+@media print{body{background:white}.no-print,header,.bottom{display:none!important}main{padding:0}.panel{border:0}.recipe{display:block!important}}
+</style>
+</head>
+<body>
+<header><h1>Il Mio Ricettario</h1><div class="sub">Le ricette che ami, tutte in un unico posto.</div></header>
+<main>
+  <section id="home">
+    <div class="toolbar"><input id="search" placeholder="Cerca una ricetta…" aria-label="Cerca una ricetta"><button id="newBtn">+ Nuova</button></div>
+    <div class="tabs" id="categories"></div>
+    <div id="recipeList" class="grid"></div>
+    <div class="panel no-print">
+      <h2>Importa una ricetta</h2>
+      <label>Link Instagram o altra fonte</label><input id="sourceUrl" placeholder="https://www.instagram.com/reel/…">
+      <label>Testo, ingredienti o trascrizione del video</label><textarea id="sourceText" placeholder="Incolla qui la descrizione, gli ingredienti o il testo della ricetta…"></textarea>
+      <label>Screenshot o foto della ricetta</label><input id="sourceImage" type="file" accept="image/*">
+      <div class="notice">Instagram spesso non permette di leggere automaticamente un Reel dal solo link. Se il video non è accessibile, incolla la descrizione o aggiungi screenshot. Puoi poi usare il pulsante per preparare il testo da trasformare con ChatGPT.</div>
+      <button id="prepareBtn" style="width:100%">Prepara la ricetta con ChatGPT</button>
+    </div>
+    <div class="panel no-print">
+      <h2>Backup</h2><div class="row"><button class="secondary" id="exportBtn">Esporta archivio</button><button class="secondary" id="importBtn">Importa backup</button></div>
+      <input id="backupFile" class="hidden" type="file" accept="application/json">
+      <p class="small">Le ricette sono salvate in questo browser su questo dispositivo. Esporta periodicamente un backup per non perderle.</p>
+    </div>
+  </section>
+
+  <section id="editor" class="hidden">
+    <div class="panel">
+      <h2 id="editorTitle">Nuova ricetta</h2>
+      <label>Nome della ricetta</label><input id="rTitle" placeholder="Es. Torta di mele">
+      <div class="row"><div><label>Categoria</label><select id="rCategory"><option>Antipasti</option><option>Primi</option><option>Secondi</option><option>Contorni</option><option>Dolci</option><option>Pane e lievitati</option><option>Ricette veloci</option><option>Altro</option></select></div><div><label>Tempo totale</label><input id="rTime" placeholder="Es. 40 minuti"></div></div>
+      <label>Ingredienti</label><textarea id="rIngredients" placeholder="Un ingrediente per riga"></textarea>
+      <label>Procedimento</label><textarea id="rSteps" placeholder="Descrivi i passaggi, uno per riga"></textarea>
+      <div class="row"><div><label>Difficoltà</label><select id="rDifficulty"><option>Facile</option><option>Media</option><option>Difficile</option></select></div><div><label>Fonte / link</label><input id="rSource" placeholder="Link Instagram o sito"></div></div>
+      <label>Note e conservazione</label><textarea id="rNotes" placeholder="Varianti, consigli, conservazione…"></textarea>
+      <label>Foto</label><input id="rPhoto" type="file" accept="image/*">
+      <div class="row" style="margin-top:16px"><button id="saveBtn">Salva ricetta</button><button class="secondary" id="cancelBtn">Annulla</button></div>
+    </div>
+  </section>
+
+  <section id="detail" class="hidden">
+    <div class="panel recipe">
+      <div class="no-print"><button class="ghost" id="backBtn">← Torna al ricettario</button></div>
+      <div id="detailContent"></div>
+      <div class="row no-print" style="margin-top:20px"><button id="editBtn">Modifica</button><button class="secondary" id="printBtn">Stampa / PDF</button></div>
+      <div class="row no-print" style="margin-top:8px"><button class="secondary" id="favoriteBtn">☆ Preferito</button><button class="danger" id="deleteBtn">Elimina</button></div>
+    </div>
+  </section>
+</main>
+<div class="bottom no-print"><button id="bottomHome">Le mie ricette</button><button id="bottomAdd" class="secondary">+ Aggiungi</button></div>
+<script>
+const $=id=>document.getElementById(id);
+const KEY='il-mio-ricettario-v1';
+let recipes=JSON.parse(localStorage.getItem(KEY)||'[]'), editing=null, current=null, filter='Tutte', photoData='';
+const cats=['Tutte','Antipasti','Primi','Secondi','Contorni','Dolci','Pane e lievitati','Ricette veloci','Altro','★ Preferiti'];
+function persist(){localStorage.setItem(KEY,JSON.stringify(recipes))}
+function show(section){['home','editor','detail'].forEach(s=>$(s).classList.toggle('hidden',s!==section));window.scrollTo(0,0)}
+function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderCats(){$('categories').innerHTML=cats.map(c=>`<button class="${filter===c?'active':''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{filter=b.dataset.cat;render()})}
+function render(){
+ renderCats();let q=$('search').value.toLowerCase();
+ let list=recipes.filter(r=>(filter==='Tutte'||(filter==='★ Preferiti'?r.favorite:r.category===filter))&&(`${r.title} ${r.ingredients} ${r.notes}`.toLowerCase().includes(q)));
+ $('recipeList').innerHTML=list.length?list.map(r=>`<article class="card"><img src="${r.photo||'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22300%22%3E%3Crect width=%22100%25%22 height=%22100%25%22 fill=%22%23eee9df%22/%3E%3Ctext x=%2250%25%22 y=%2253%25%22 text-anchor=%22middle%22 fill=%22%23777365%22 font-size=%2224%22%3EIl mio ricettario%3C/text%3E%3C/svg%3E'}" alt=""><div class="cardbody"><h3>${esc(r.title)}</h3><div class="meta">${esc(r.category)} · ${esc(r.time||'Tempo non indicato')}</div><div class="cardactions"><span class="small">${r.favorite?'★ Preferita':''}</span><button class="secondary" data-open="${r.id}">Apri</button></div></div></article>`).join(''):`<div class="empty"><strong>Il tuo ricettario inizia qui</strong>Importa una ricetta o premi “Nuova” per aggiungerne una.</div>`;
+ document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openRecipe(b.dataset.open));
+}
+function resetEditor(){editing=null;photoData='';['rTitle','rTime','rIngredients','rSteps','rSource','rNotes'].forEach(id=>$(id).value='');$('rCategory').value='Dolci';$('rDifficulty').value='Facile';$('rPhoto').value='';$('editorTitle').textContent='Nuova ricetta'}
+function newRecipe(){resetEditor();show('editor')}
+function editRecipe(r){editing=r.id;photoData=r.photo||'';$('editorTitle').textContent='Modifica ricetta';$('rTitle').value=r.title;$('rCategory').value=r.category;$('rTime').value=r.time||'';$('rIngredients').value=r.ingredients||'';$('rSteps').value=r.steps||'';$('rDifficulty').value=r.difficulty||'Facile';$('rSource').value=r.source||'';$('rNotes').value=r.notes||'';show('editor')}
+function openRecipe(id){current=recipes.find(r=>r.id===id);if(!current)return;let r=current;
+ $('detailContent').innerHTML=`${r.photo?`<img src="${r.photo}" style="width:100%;max-height:260px;object-fit:cover;border-radius:14px">`:''}<div class="meta" style="margin-top:12px">${esc(r.category)} · ${esc(r.time||'Tempo non indicato')} · ${esc(r.difficulty||'')}</div><h2>${esc(r.title)}</h2>${r.source?`<p class="small">Fonte: <a href="${esc(r.source)}" target="_blank" rel="noopener">${esc(r.source)}</a></p>`:''}<h3>Ingredienti</h3><ul>${(r.ingredients||'').split('\n').filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join('')}</ul><h3>Preparazione</h3><ol>${(r.steps||'').split('\n').filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join('')}</ol>${r.notes?`<h3>Note e conservazione</h3><p>${esc(r.notes).replace(/\n/g,'<br>')}</p>`:''}`;
+ $('favoriteBtn').textContent=r.favorite?'★ Nei preferiti':'☆ Aggiungi ai preferiti';show('detail')}
+function saveRecipe(){let title=$('rTitle').value.trim();if(!title){alert('Inserisci il nome della ricetta.');return}
+ let old=recipes.find(r=>r.id===editing);let r={id:editing||String(Date.now()),title,category:$('rCategory').value,time:$('rTime').value,ingredients:$('rIngredients').value,steps:$('rSteps').value,difficulty:$('rDifficulty').value,source:$('rSource').value,notes:$('rNotes').value,photo:photoData||old?.photo||'',favorite:old?.favorite||false};
+ if(editing)recipes=recipes.map(x=>x.id===editing?r:x);else recipes.unshift(r);persist();render();show('home')}
+$('newBtn').onclick=newRecipe;$('bottomAdd').onclick=newRecipe;$('bottomHome').onclick=()=>show('home');$('cancelBtn').onclick=()=>show('home');$('saveBtn').onclick=saveRecipe;$('search').oninput=render;
+$('rPhoto').onchange=e=>readPhoto(e.target.files[0],v=>photoData=v);
+$('sourceImage').onchange=e=>readPhoto(e.target.files[0],v=>{photoData=v;alert('Immagine caricata. Per conservarla nella ricetta, apri “Nuova” e selezionala anche nel campo Foto.')});
+function readPhoto(file,cb){if(!file)return;let rd=new FileReader();rd.onload=()=>cb(rd.result);rd.readAsDataURL(file)}
+$('backBtn').onclick=()=>show('home');$('editBtn').onclick=()=>editRecipe(current);$('printBtn').onclick=()=>window.print();
+$('favoriteBtn').onclick=()=>{current.favorite=!current.favorite;persist();openRecipe(current.id);render()};
+$('deleteBtn').onclick=()=>{if(confirm('Vuoi eliminare questa ricetta?')){recipes=recipes.filter(r=>r.id!==current.id);persist();render();show('home')}};
+$('prepareBtn').onclick=async()=>{let url=$('sourceUrl').value.trim(),txt=$('sourceText').value.trim();if(!url&&!txt&&!photoData){alert('Incolla un link, del testo o aggiungi una foto.');return}
+ let prompt=`Trasforma questo contenuto in una ricetta italiana chiara e completa. Organizza titolo, ingredienti con quantità, procedimento numerato, tempi, difficoltà, consigli e conservazione. Non inventare dosi: segnala ciò che manca e separa le stime dalle informazioni certe.\\n\\nLink fonte: ${url}\\nContenuto: ${txt}\\n\\nRestituisci il testo pronto da copiare nel mio ricettario.`;
+ try{await navigator.clipboard.writeText(prompt);alert('Testo copiato. Apri ChatGPT, incollalo e poi copia la ricetta completa nei campi del ricettario.')}catch(e){promptBox(prompt)}};
+function promptBox(t){let w=window.open('','_blank');if(w){w.document.write('<textarea style="width:100%;height:90vh;font:16px sans-serif">'+esc(t)+'</textarea>')}else alert(t)}
+$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(recipes,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup-il-mio-ricettario.json';a.click();URL.revokeObjectURL(a.href)};
+$('importBtn').onclick=()=>$('backupFile').click();$('backupFile').onchange=e=>{let f=e.target.files[0];if(!f)return;let rd=new FileReader();rd.onload=()=>{try{let data=JSON.parse(rd.result);if(!Array.isArray(data))throw 0;if(confirm('Importare il backup? Le ricette attuali verranno unite.')){let ids=new Set(recipes.map(r=>r.id));recipes=[...recipes,...data.filter(r=>!ids.has(r.id))];persist();render();alert('Backup importato.')}}catch(err){alert('File di backup non valido.')}};rd.readAsText(f)};
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+render();
+</script>
+</body></html>

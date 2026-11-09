@@ -1,0 +1,24 @@
+# Il Mio Ricettario
+
+Web app personale, senza abbonamenti e senza servizi a pagamento.
+
+## Cosa fa
+- Salva ricette in locale sul browser del dispositivo.
+- Categorie, ricerca, preferiti, modifica ed eliminazione.
+- Foto, link fonte, note e conservazione.
+- Stampa o salva in PDF dal menu di stampa del browser.
+- Esporta e importa un backup JSON.
+- Prepara un prompt da usare con ChatGPT per riscrivere ingredienti e procedimento.
+
+## Limite importante
+Instagram spesso impedisce l'accesso automatico ai contenuti dei Reel. Il link da solo non garantisce l'estrazione della ricetta. Per la conversione AI, questa versione prepara il testo da inviare a ChatGPT: non include un'API AI a pagamento.
+
+## Installazione su iPhone
+La web app deve essere pubblicata su un indirizzo HTTPS (ad esempio GitHub Pages, gratuito).
+1. Carica tutti i file di questa cartella in un repository GitHub.
+2. In Settings > Pages scegli Deploy from a branch, branch `main`, folder `/root`.
+3. Apri l'indirizzo HTTPS generato con Safari su iPhone.
+4. Tocca Condividi > Aggiungi alla schermata Home.
+
+## Dati e backup
+Le ricette sono conservate nel localStorage di Safari sul dispositivo. Non vengono sincronizzate automaticamente con altri dispositivi. Usa regolarmente “Esporta archivio” e conserva il file JSON in File/iCloud Drive.
